@@ -56,7 +56,7 @@ class ScheduleRepository(
     context: Context,
     private val credentialStore: SecureCredentialStore,
     private val preferences: AppPreferences,
-    private val client: SjdScheduleClient = SjdScheduleClient(),
+    private val client: ZquScheduleClient = ZquScheduleClient(preferences),
     private val store: ScheduleStore = ScheduleStore(context.applicationContext),
 ) {
     private val appContext = context.applicationContext

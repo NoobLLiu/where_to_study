@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Where To Study</string>
-    <string name="brand_eyebrow">BUPT</string>
+    <string name="brand_eyebrow">ZQU</string>
     <string name="brand_name">Where To Study</string>
     <string name="planner_eyebrow">Where To Study</string>
     <string name="slot_format">Period %1$s\n%2$s–%3$s</string>
@@ -12,15 +12,15 @@
     <string name="holiday_item_format">%1$s %2$s</string>
     <string name="holiday_marker">Off</string>
     <string name="workday_marker">Work</string>
-    <string name="credential_security_note">Your account and password stay on this device and are protected by Android Keystore.</string>
+    <string name="credential_security_note">Your student ID and academic affairs Cookie stay on this device and are protected by Android Keystore.</string>
     <string name="privacy_consent_title">Privacy Policy and Personal Information</string>
-    <string name="privacy_consent_summary">Welcome to Where To Study. Please read and understand the Privacy Policy before continuing. When you save an account or request schedules, classrooms, or assignments, the app sends necessary information over HTTPS to relevant BUPT services. After valid credentials are saved, enabled settings may also refresh the schedule and today’s empty classrooms automatically. Schedules, credentials, and preferences stay on this device. By tapping “Agree and Continue,” you confirm that you have read and agree to the Privacy Policy. If you decline, the app exits and its main features remain unavailable.</string>
+    <string name="privacy_consent_summary">Welcome to Where To Study (Zhaoqing University edition). Please read and understand the Privacy Policy before continuing. When you save your student ID or fetch your personal schedule, the app sends necessary information over HTTPS to the Zhaoqing University academic affairs system (including the Cookie you provide). After valid credentials are saved, settings may also refresh your personal schedule automatically. Schedules, credentials, and preferences stay on this device. By tapping “Agree and Continue,” you confirm that you have read and agree to the Privacy Policy. If you decline, the app exits and its main features remain unavailable.</string>
     <string name="privacy_consent_accept">Agree and Continue</string>
     <string name="privacy_consent_decline">Decline and Exit</string>
     <string name="view_full_privacy_policy">View Full Privacy Policy</string>
     <string name="privacy_policy_open_failed">Unable to open the full Privacy Policy. Please try again later.</string>
     <string name="privacy_consent_save_failed">Unable to save your consent, so the app cannot continue.</string>
-    <string name="account_privacy_notice">Before saving an academic account, read the Privacy Policy to understand how credentials are used, where they are sent, and how they are stored locally.</string>
+    <string name="account_privacy_notice">Before saving academic affairs credentials (student ID and Cookie), read the Privacy Policy to understand how credentials are used, where they are sent, and how they are stored locally.</string>
     <string name="daily_course_notification_toggle">Send today’s course summary daily</string>
     <string name="daily_course_notification_description">Only notifies on days with courses, around the chosen Beijing time. Battery saving may delay delivery. Time changes reschedule immediately; at most one summary per day.</string>
     <string name="daily_course_notification_time_format">Reminder time · %1$s (Beijing time)</string>

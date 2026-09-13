@@ -83,42 +83,39 @@ data class HolidaysSnapshot(
 
 object AppMetadata {
     const val classroomsCacheVersion = 2
-    const val defaultTermID = ""
-    const val defaultTermStartDate = ""
 
+    // 魔改（肇庆学院）：默认学期与第一周周一（兜底值；成功抓取后会被排课日期反推覆盖）。
+    const val defaultTermID = "2026-2027-1"
+    const val defaultTermStartDate = "2026-08-31"
+
+    // 魔改（肇庆学院）：单校区。
     val campuses = listOf(
-        CampusMetadata(id = "01", name = "西土城"),
-        CampusMetadata(id = "04", name = "沙河"),
+        CampusMetadata(id = "01", name = "肇庆学院"),
     )
 
+    // 魔改（肇庆学院）：空教室查询已停用，教学楼清单不再使用。
     private val buildingsByCampusID = mapOf(
-        "01" to listOf("教1", "教2", "教3", "教4", "主楼"),
-        "04" to listOf(
-            "综合教学楼N",
-            "综合教学楼S",
-            "教学实验综合楼N",
-            "教学实验综合楼S",
-            "智慧教学楼",
-        ),
+        "01" to emptyList<String>(),
     )
 
     fun buildings(campusID: String): List<String> = buildingsByCampusID[campusID].orEmpty()
 
+    // 魔改（肇庆学院）：14 节作息时间表（来源：肇庆学院教务部）。
     val slots = listOf(
-        SlotMetadata(0, "1", "08:00", "08:45"),
-        SlotMetadata(1, "2", "08:50", "09:35"),
-        SlotMetadata(2, "3", "09:50", "10:35"),
-        SlotMetadata(3, "4", "10:40", "11:25"),
-        SlotMetadata(4, "5", "11:30", "12:15"),
-        SlotMetadata(5, "6", "13:00", "13:45"),
-        SlotMetadata(6, "7", "13:50", "14:35"),
-        SlotMetadata(7, "8", "14:45", "15:30"),
-        SlotMetadata(8, "9", "15:40", "16:25"),
-        SlotMetadata(9, "10", "16:35", "17:20"),
-        SlotMetadata(10, "11", "17:25", "18:10"),
-        SlotMetadata(11, "12", "18:30", "19:15"),
-        SlotMetadata(12, "13", "19:20", "20:05"),
-        SlotMetadata(13, "14", "20:10", "20:55"),
+        SlotMetadata(0, "1", "08:00", "08:40"),
+        SlotMetadata(1, "2", "08:50", "09:30"),
+        SlotMetadata(2, "3", "09:50", "10:30"),
+        SlotMetadata(3, "4", "10:40", "11:20"),
+        SlotMetadata(4, "5", "11:30", "12:10"),
+        SlotMetadata(5, "6", "14:30", "15:10"),
+        SlotMetadata(6, "7", "15:20", "16:00"),
+        SlotMetadata(7, "8", "16:15", "16:55"),
+        SlotMetadata(8, "9", "17:05", "17:45"),
+        SlotMetadata(9, "10", "17:55", "18:35"),
+        SlotMetadata(10, "11", "19:00", "19:40"),
+        SlotMetadata(11, "12", "19:50", "20:30"),
+        SlotMetadata(12, "13", "20:40", "21:20"),
+        SlotMetadata(13, "14", "21:30", "22:10"),
     )
 }
 

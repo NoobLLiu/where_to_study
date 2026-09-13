@@ -53,7 +53,8 @@ class SettingsPage(
     private fun refreshScheduleAutomaticallyAfterSave() {
         scheduleRepository.refreshAutomatically { result ->
             if (result.isSuccess) {
-                activity.reconcileDailyCourseNotifications()
+                // 魔改（肇庆学院）：每日课程摘要通知停用。
+                // activity.reconcileDailyCourseNotifications()
                 activity.refreshCurrentPage()
             }
         }
@@ -84,7 +85,8 @@ class SettingsPage(
                         addView(spacer(activity, UiMetrics.sectionSpacingDp))
                         addView(semesterSurface())
                         addView(spacer(activity, UiMetrics.sectionSpacingDp))
-                        addView(deletedCoursesSurface())
+                        // 魔改（肇庆学院）：已删除课程设置停用（北邮专属）。
+                        // addView(deletedCoursesSurface())
                     }, LinearLayout.LayoutParams(
                         0,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -92,12 +94,13 @@ class SettingsPage(
                     ).apply { marginEnd = activity.dp(8) })
                     addView(LinearLayout(activity).apply {
                         orientation = LinearLayout.VERTICAL
-                        addView(notificationSurface())
-                        addView(spacer(activity, UiMetrics.sectionSpacingDp))
-                        addView(informationSurface())
-                        addView(spacer(activity, UiMetrics.sectionSpacingDp))
-                        addView(widgetSurface())
-                        addView(spacer(activity, UiMetrics.sectionSpacingDp))
+                        // 魔改（肇庆学院）：每日提醒/信息查询/桌面小组件设置停用（北邮专属）。
+                        // addView(notificationSurface())
+                        // addView(spacer(activity, UiMetrics.sectionSpacingDp))
+                        // addView(informationSurface())
+                        // addView(spacer(activity, UiMetrics.sectionSpacingDp))
+                        // addView(widgetSurface())
+                        // addView(spacer(activity, UiMetrics.sectionSpacingDp))
                         addView(ColorThemeSettingsView(activity, isCompact, availableWidthDp))
                         addView(spacer(activity, UiMetrics.sectionSpacingDp))
                         addView(languageSurface())
@@ -116,14 +119,15 @@ class SettingsPage(
                 addView(spacer(activity, UiMetrics.sectionSpacingDp))
                 addView(semesterSurface())
                 addView(spacer(activity, UiMetrics.sectionSpacingDp))
-                addView(deletedCoursesSurface())
-                addView(spacer(activity, UiMetrics.sectionSpacingDp))
-                addView(notificationSurface())
-                addView(spacer(activity, UiMetrics.sectionSpacingDp))
-                addView(informationSurface())
-                addView(spacer(activity, UiMetrics.sectionSpacingDp))
-                addView(widgetSurface())
-                addView(spacer(activity, UiMetrics.sectionSpacingDp))
+                // 魔改（肇庆学院）：已删除课程/每日提醒/信息查询/桌面小组件设置停用（北邮专属）。
+                // addView(deletedCoursesSurface())
+                // addView(spacer(activity, UiMetrics.sectionSpacingDp))
+                // addView(notificationSurface())
+                // addView(spacer(activity, UiMetrics.sectionSpacingDp))
+                // addView(informationSurface())
+                // addView(spacer(activity, UiMetrics.sectionSpacingDp))
+                // addView(widgetSurface())
+                // addView(spacer(activity, UiMetrics.sectionSpacingDp))
                 addView(ColorThemeSettingsView(activity, isCompact, availableWidthDp))
                 addView(spacer(activity, UiMetrics.sectionSpacingDp))
                 addView(languageSurface())
@@ -234,175 +238,99 @@ class SettingsPage(
 
     private fun accountSurface(): LinearLayout = surface(activity, showsBorder = false).apply {
         applyCompactSurfacePadding()
-        val savedIdentity = credentialStore.load()?.let {
-            Triple(it.account, it.password.isNotEmpty(), !it.teachingCloudPassword.isNullOrEmpty())
-        }
-        var persistedAccount = savedIdentity?.first.orEmpty()
-        var hasPersistedPassword = savedIdentity?.second == true
-        var hasPersistedCloudPassword = savedIdentity?.third == true
-        var useAcademicPassword = false
+        // 魔改（肇庆学院）：账户区改为「学号 + 教务 Cookie + 教务地址 + 班级代码」，
+        // 去掉教学云平台密码与校区选择（北邮专属）。
+        val savedCredentials = credentialStore.load()
+        var persistedAccount = savedCredentials?.account.orEmpty()
+        var hasPersistedCookie = savedCredentials?.password?.isNotEmpty() == true
         addView(sectionTitle(activity, "个人账户", R.drawable.ic_settings_account))
-        val account = field("教务账号", persistedAccount, false)
-        val password = field("教务密码", "", true)
-        val cloudPassword = field("教学云平台密码（可选）", "", true)
-        val cloudPasswordStatus = TextView(activity).apply {
+        val account = field("学号", persistedAccount, false)
+        val cookie = cookieField("教务 Cookie（从浏览器复制完整 Cookie 请求头）", "")
+        val cookieStatus = TextView(activity).apply {
             textSize = 12f
             setThemeTextColor { Palette.muted }
             setPadding(activity.dp(2), activity.dp(7), activity.dp(2), 0)
         }
-        val passwordStatus = TextView(activity).apply {
-            textSize = 12f
-            setThemeTextColor { Palette.muted }
-            setPadding(activity.dp(2), activity.dp(7), activity.dp(2), 0)
-        }
-        fun updatePasswordStatus() {
-            val preservesSavedPassword = hasPersistedPassword &&
+        fun updateCookieStatus() {
+            val preservesSavedCookie = hasPersistedCookie &&
                 persistedAccount == account.text.toString().trim()
-            passwordStatus.text = if (preservesSavedPassword) {
-                activity.uiText("密码已安全保存，留空保持不变")
-            } else if (hasPersistedPassword && account.text.toString().trim().isNotEmpty()) {
-                activity.uiText("更换账号时请输入新密码")
-            } else {
-                ""
+            cookieStatus.text = when {
+                preservesSavedCookie -> activity.uiText("Cookie 已安全保存，留空保持不变")
+                hasPersistedCookie -> activity.uiText("更换学号时请粘贴新 Cookie")
+                else -> ""
             }
-            passwordStatus.visibility = if (passwordStatus.text.isEmpty()) View.GONE else View.VISIBLE
-            cloudPasswordStatus.text = activity.uiText(when {
-                cloudPassword.text.isNotEmpty() -> "保存后使用独立教学云平台密码获取作业 DDL"
-                useAcademicPassword -> "保存后使用教务密码获取作业 DDL"
-                hasPersistedCloudPassword && persistedAccount == account.text.toString().trim() ->
-                    "教学云平台密码已安全保存，留空保持不变"
-                else -> "仅用于课程作业 DDL；未设置时使用教务密码"
-            })
+            cookieStatus.visibility = if (cookieStatus.text.isEmpty()) View.GONE else View.VISIBLE
         }
         account.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(value: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
             override fun onTextChanged(value: CharSequence?, start: Int, before: Int, count: Int) {
-                updatePasswordStatus()
+                updateCookieStatus()
             }
 
             override fun afterTextChanged(value: Editable?) = Unit
         })
-        cloudPassword.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(value: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(value: CharSequence?, start: Int, before: Int, count: Int) {
-                if (!value.isNullOrEmpty()) useAcademicPassword = false
-                updatePasswordStatus()
-            }
-            override fun afterTextChanged(value: Editable?) = Unit
-        })
-        updatePasswordStatus()
+        updateCookieStatus()
         addView(account)
         addView(spacer(activity, compactGap))
-        addView(password)
-        addView(passwordStatus)
-        addView(spacer(activity, compactGap))
-        addView(cloudPassword)
-        addView(cloudPasswordStatus)
-        addView(TextView(activity).apply {
-            text = "使用教务密码"
-            textSize = 13f
-            setThemeTextColor { Palette.primary }
-            gravity = Gravity.CENTER_VERTICAL
-            minHeight = activity.dp(controlHeight)
-            isClickable = true
-            isFocusable = true
-            setOnClickListener {
-                activity.performControlHaptic(it)
-                cloudPassword.text.clear()
-                useAcademicPassword = true
-                updatePasswordStatus()
-            }
-        })
+        addView(cookie)
+        addView(cookieStatus)
         addView(spacer(activity, if (isCompact) 10 else 16))
         addView(TextView(activity).apply {
-            text = "默认校区"
+            text = "教务系统地址"
             textSize = 13f
             setThemeTextColor { Palette.muted }
             setPadding(0, 0, 0, activity.dp(if (isCompact) 5 else 7))
         })
-        val campusLabels = AppMetadata.campuses.map { activity.uiText(it.name) }
-        var selectedCampusIndex = AppMetadata.campuses
-            .indexOfFirst { it.id == preferences.campusID }
-            .coerceAtLeast(0)
-        val campus = segmentedControl(
-            labels = campusLabels,
-            initialIndex = selectedCampusIndex,
-            viewID = R.id.settings_campus_selector,
-        ) { position, source ->
-            activity.performControlHaptic(source)
-            selectedCampusIndex = position
-        }
-        addView(campus)
+        val jwglURL = field(
+            "默认 https://jwgl.zqu.edu.cn；校外可填 WebVPN 地址",
+            preferences.jwglBaseURL,
+            false,
+        )
+        addView(jwglURL)
+        addView(spacer(activity, if (isCompact) 10 else 14))
+        addView(TextView(activity).apply {
+            text = "班级代码（bjdm）"
+            textSize = 13f
+            setThemeTextColor { Palette.muted }
+            setPadding(0, 0, 0, activity.dp(if (isCompact) 5 else 7))
+        })
+        val classCode = field(
+            "例如 114334763（法学5班）",
+            preferences.classCode,
+            false,
+        )
+        addView(classCode)
         addView(spacer(activity, if (isCompact) 12 else 18))
-        fun saveSettings(): Result<Credentials> {
-            var credentialTransactionStarted = false
-            val result = runCatching {
-                val savedCredentials = credentialStore.load()
-                val credentials = CredentialUpdateLogic.resolve(
-                    saved = savedCredentials,
-                    requestedAccount = account.text.toString(),
-                    enteredPassword = password.text.toString(),
-                    enteredTeachingCloudPassword = cloudPassword.text.toString(),
-                    useAcademicPassword = useAcademicPassword,
-                )
-                val accountChanged = CredentialUpdateLogic.changesAccount(
-                    savedCredentials,
-                    credentials,
-                )
-                val persist: () -> Credentials = {
-                    credentials.also {
-                        credentialStore.save(credentials)
-                        if (CredentialUpdateLogic.changesAssignmentCredentials(savedCredentials, credentials)) {
-                            activity.clearCalendarAssignmentData()
-                        }
-                        preferences.campusID = AppMetadata.campuses[selectedCampusIndex].id
-                    }
+        fun saveSettings(): Result<Credentials> = runCatching {
+            val saved = credentialStore.load()
+            val credentials = CredentialUpdateLogic.resolve(
+                saved = saved,
+                requestedAccount = account.text.toString(),
+                enteredPassword = cookie.text.toString(),
+            )
+            check(credentials.account.isNotBlank()) { "请输入学号。" }
+            val accountChanged = CredentialUpdateLogic.changesAccount(saved, credentials)
+            if (accountChanged) {
+                // 魔改（肇庆学院）：学号变更时清空本地课表，避免展示他人课表。
+                LocalDataCoordinator.clear {
+                    scheduleRepository.clearLocalDataCoordinated(clearCourseDeletions = false)
                 }
-                if (accountChanged) {
-                    credentialTransactionStarted = true
-                    activity.clearCalendarAssignmentData()
-                    check(DailyClassroomRefreshScheduler.cancel(activity)) {
-                        "无法可靠撤销旧账号的空教室后台刷新，设置未保存。"
-                    }
-                    check(activity.clearDailyCourseNotificationsForAccountChange()) {
-                        "无法可靠撤销旧账号的课程提醒，设置未保存。"
-                    }
-                    LocalDataCoordinator.clear {
-                        scheduleRepository.clearLocalDataCoordinated(clearCourseDeletions = false)
-                        classroomRepository.clearLocalDataCoordinated()
-                        persist()
-                    }
-                } else {
-                    credentialTransactionStarted = true
-                    val generation = LocalDataCoordinator.snapshot()
-                    LocalDataCoordinator.withCurrent(generation, persist)
-                }
-                check(DailyClassroomRefreshScheduler.ensureScheduled(activity)) {
-                    "无法更新空教室后台刷新任务。"
-                }
-                credentials
             }
-            if (result.isFailure && credentialTransactionStarted &&
-                !DailyClassroomRefreshScheduler.cancel(activity)
-            ) {
-                return Result.failure(
-                    IllegalStateException(
-                        "账号设置失败，且无法可靠撤销空教室后台刷新。",
-                        result.exceptionOrNull(),
-                    ),
-                )
+            credentials.also {
+                credentialStore.save(it)
+                // 魔改（肇庆学院）：保存乘方教务对接参数。
+                preferences.jwglBaseURL = jwglURL.text.toString().trim()
+                    .ifBlank { ZquScheduleClient.DEFAULT_BASE_URL }
+                preferences.classCode = classCode.text.toString().trim()
+                    .ifBlank { ZquScheduleClient.DEFAULT_CLASS_CODE }
             }
-            return result
         }
         fun applySavedCredentials(credentials: Credentials) {
             persistedAccount = credentials.account
-            hasPersistedPassword = credentials.password.isNotEmpty()
-            hasPersistedCloudPassword = !credentials.teachingCloudPassword.isNullOrEmpty()
-            useAcademicPassword = false
-            password.text.clear()
-            cloudPassword.text.clear()
-            updatePasswordStatus()
+            hasPersistedCookie = credentials.password.isNotEmpty()
+            cookie.text.clear()
+            updateCookieStatus()
         }
 
         addView(TextView(activity).apply {
@@ -474,7 +402,8 @@ class SettingsPage(
                     button.text = activity.uiText("获取/刷新个人课表")
                     button.isEnabled = true
                     result.onSuccess { schedule ->
-                        activity.reconcileDailyCourseNotifications()
+                        // 魔改（肇庆学院）：每日课程摘要通知停用。
+                        // activity.reconcileDailyCourseNotifications()
                         Toast.makeText(
                             activity,
                             activity.uiText("个人课表已更新，共 ${schedule.courses.size} 门课程"),
@@ -1359,6 +1288,40 @@ class SettingsPage(
             minHeight = activity.dp(controlHeight)
             setPadding(activity.dp(13), 0, activity.dp(13), 0)
             layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+        }
+    }
+
+    // 魔改（肇庆学院）：Cookie 需要粘贴长文本，使用多行输入框。
+    private fun cookieField(hintText: String, value: String): EditText = EditText(activity).apply {
+        hint = hintText
+        setText(value)
+        textSize = 14f
+        setThemeTextColor { Palette.text }
+        bindTheme("hint") { setHintTextColor(Palette.muted) }
+        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or
+            InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        minLines = 3
+        gravity = Gravity.TOP or Gravity.START
+        isSaveEnabled = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+            setAutofillHints(null)
+        }
+        background = themedRoundedBackground(
+            activity, { if (Palette.selection.preset == "default") Palette.surface else Palette.surfaceVariant }, { Palette.border },
+            radius = 6)
+        setPadding(activity.dp(13), activity.dp(10), activity.dp(13), activity.dp(10))
+        layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
+        minHeight = activity.dp(controlHeight)
+        if (isCompact) {
+            background = themedRoundedBackground(
+                activity,
+                { if (Palette.selection.preset == "default") Palette.background else Palette.surfaceVariant },
+                radius = UiMetrics.phoneControlRadiusDp,
+            )
         }
     }
 

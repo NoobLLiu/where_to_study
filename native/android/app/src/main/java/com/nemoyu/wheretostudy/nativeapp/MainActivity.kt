@@ -51,11 +51,15 @@ class MainActivity : Activity() {
         val pageViewID: Int,
         val iconResource: Int,
     ) {
-        PLANNER("空教室", R.id.navigation_planner, R.id.page_planner, R.drawable.ic_nav_classroom),
+        // 魔改（肇庆学院）：PLANNER 改为承载「个人课表」页；教学日历/查询页停用。
+        PLANNER("课表", R.id.navigation_planner, R.id.page_planner, R.drawable.ic_nav_classroom),
         CALENDAR("教学日历", R.id.navigation_calendar, R.id.page_calendar, R.drawable.ic_nav_calendar),
         QUERY("查询", R.id.navigation_query, R.id.page_query, R.drawable.ic_nav_query),
         SETTINGS("设置", R.id.navigation_settings, R.id.page_settings, R.drawable.ic_nav_settings),
     }
+
+    // 魔改（肇庆学院）：导航仅保留「课表」与「设置」；CALENDAR/QUERY 枚举项保留以免悬挂引用。
+    private val navigationDestinations = listOf(Destination.PLANNER, Destination.SETTINGS)
 
     private enum class SettingsRoute { MAIN, FAVORITES }
     private enum class CalendarImportKind { SCHEDULE, FAVORITES }
@@ -211,14 +215,17 @@ class MainActivity : Activity() {
         applicationContentStarted = true
         installAdaptiveRoot()
         configureSystemBarIcons()
-        prewarmPublicDeadlinesIfEnabled()
-        calendarDailyInfoRepository.loadImportantEvents()
-        shuttleBusRepository.load()
+        // 魔改（肇庆学院）：停用北邮专属的公共截止日期预热、校历事件与校车加载。
+        // prewarmPublicDeadlinesIfEnabled()
+        // calendarDailyInfoRepository.loadImportantEvents()
+        // shuttleBusRepository.load()
         updateAdaptiveLayout(force = true)
-        DailyClassroomRefreshScheduler.ensureScheduled(this)
-        DailyCourseSummaryScheduler.reconcile(this)
+        // 魔改（肇庆学院）：停用每日空教室刷新与每日课程摘要通知。
+        // DailyClassroomRefreshScheduler.ensureScheduled(this)
+        // DailyCourseSummaryScheduler.reconcile(this)
         refreshScheduleAtStartup()
-        refreshClassroomsAtStartup()
+        // 魔改（肇庆学院）：停用空教室启动刷新。
+        // refreshClassroomsAtStartup()
         if (calendarPermissionRequestPending && hasCalendarPermissions()) {
             resumeCalendarImportAfterRecreation()
         } else {
@@ -242,16 +249,17 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         if (!applicationContentStarted) return
-        prewarmPublicDeadlinesIfEnabled()
-        calendarDailyInfoRepository.loadImportantEvents()
-        shuttleBusRepository.load()
-        val settingChanged = DailyCourseSummaryScheduler.synchronizePermissionState(this)
-        DailyCourseSummaryScheduler.reconcile(this)
-        if (settingChanged && ::content.isInitialized &&
-            selectedDestination == Destination.SETTINGS
-        ) {
-            refreshCurrentPage()
-        }
+        // 魔改（肇庆学院）：停用北邮专属的截止日期/校历/校车刷新与每日课程摘要同步。
+        // prewarmPublicDeadlinesIfEnabled()
+        // calendarDailyInfoRepository.loadImportantEvents()
+        // shuttleBusRepository.load()
+        // val settingChanged = DailyCourseSummaryScheduler.synchronizePermissionState(this)
+        // DailyCourseSummaryScheduler.reconcile(this)
+        // if (settingChanged && ::content.isInitialized &&
+        //     selectedDestination == Destination.SETTINGS
+        // ) {
+        //     refreshCurrentPage()
+        // }
     }
 
     override fun onStart() {
@@ -285,7 +293,7 @@ class MainActivity : Activity() {
         addView(content)
         addView(PhoneNavigationBar(this@MainActivity).apply {
             id = R.id.phone_navigation
-            setItems(Destination.entries.map { destination -> navigationTab(destination, compact = true) })
+            setItems(navigationDestinations.map { destination -> navigationTab(destination, compact = true) })
             phoneNavigationBar = this
         }, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -347,7 +355,7 @@ class MainActivity : Activity() {
                 navigationRailToggle = toggle
                 addView(toggle, LinearLayout.LayoutParams(dp(48), dp(48)))
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(64)))
-            Destination.entries.forEach { destination ->
+            navigationDestinations.forEach { destination ->
                 addView(navigationTab(destination, compact = false))
             }
         }
@@ -520,10 +528,10 @@ class MainActivity : Activity() {
         val height = dp(PhoneNavigationLayoutLogic.ITEM_HEIGHT_DP - 24 - 2 - 5)
         val pageWidth = currentLayoutSpec?.contentWidthDp ?: resources.configuration.screenWidthDp
         val width = (dp(pageWidth) - dp(PhoneNavigationLayoutLogic.HORIZONTAL_MARGIN_DP * 2 + 8)) /
-            Destination.entries.size - dp(2)
+            navigationDestinations.size - dp(2)
         // Account for localized glyphs, CJK fallback fonts and the longest caption.
         // Switch all items together to centered icons if any caption cannot fit.
-        return Destination.entries.all { destination ->
+        return navigationDestinations.all { destination ->
             val label = TextView(this).apply {
                 text = uiText(destination.label)
                 textSize = 11f
@@ -666,7 +674,8 @@ class MainActivity : Activity() {
     private fun navigate(destination: Destination) {
         val previousDestination = selectedDestination
         selectedDestination = destination
-        if (destination == Destination.SETTINGS) prewarmPublicDeadlinesIfEnabled()
+        // 魔改（肇庆学院）：停用截止日期预热。
+        // if (destination == Destination.SETTINGS) prewarmPublicDeadlinesIfEnabled()
         if (destination == Destination.SETTINGS) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         } else {
@@ -705,48 +714,48 @@ class MainActivity : Activity() {
                 radius = UiMetrics.controlRadiusDp)
             UiText.localizeTree(view)
         }
-        phoneNavigationBar?.select(destination.ordinal, previousDestination != destination)
+        phoneNavigationBar?.select(navigationDestinations.indexOf(destination), previousDestination != destination)
         updatePhoneNavigationVisibility()
         val page = when (destination) {
-            Destination.PLANNER -> PlannerPage(
+            // 魔改（肇庆学院）：PLANNER 现承载个人课表页（原空教室联动查询页已停用）。
+            Destination.PLANNER -> SchedulePage(
                 this,
-                plannerQueryState,
                 scheduleRepository,
-                classroomRepository,
-                weatherRepository,
                 preferences,
                 currentLayoutSpec?.contentWidthDp ?: currentWindowWidthDp(),
                 currentLayoutSpec?.usesBottomNavigation == true,
             ).build()
-            Destination.CALENDAR -> TeachingCalendarPage(
-                this,
-                scheduleRepository,
-                holidayRepository,
-                calendarDailyInfoRepository,
-                preferences,
-                currentLayoutSpec?.contentWidthDp ?: currentWindowWidthDp(),
-                teachingCalendarSessionState,
-                currentLayoutSpec?.usesBottomNavigation == true,
-            ).build()
-            Destination.QUERY -> FrameLayout(this).apply {
-                setThemeBackgroundColor { Palette.background }
-                addView(
-                    InformationQueryPage(
-                        activity = this@MainActivity,
-                        shuttleRepository = shuttleBusRepository,
-                        dailyInfoRepository = calendarDailyInfoRepository,
-                        preferences = preferences,
-                        availableWidthDp = currentLayoutSpec?.contentWidthDp
-                            ?: currentWindowWidthDp(),
-                        sessionState = informationQuerySessionState,
-                        usesBottomNavigation = currentLayoutSpec?.usesBottomNavigation == true,
-                    ).build(),
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    ),
-                )
-            }
+            // 魔改（肇庆学院）：教学日历页停用（北邮专属）。
+            // Destination.CALENDAR -> TeachingCalendarPage(
+            //     this,
+            //     scheduleRepository,
+            //     holidayRepository,
+            //     calendarDailyInfoRepository,
+            //     preferences,
+            //     currentLayoutSpec?.contentWidthDp ?: currentWindowWidthDp(),
+            //     teachingCalendarSessionState,
+            //     currentLayoutSpec?.usesBottomNavigation == true,
+            // ).build()
+            // 魔改（肇庆学院）：查询页（校车/校历事件）停用（北邮专属）。
+            // Destination.QUERY -> FrameLayout(this).apply {
+            //     setThemeBackgroundColor { Palette.background }
+            //     addView(
+            //         InformationQueryPage(
+            //             activity = this@MainActivity,
+            //             shuttleRepository = shuttleBusRepository,
+            //             dailyInfoRepository = calendarDailyInfoRepository,
+            //             preferences = preferences,
+            //             availableWidthDp = currentLayoutSpec?.contentWidthDp
+            //                 ?: currentWindowWidthDp(),
+            //             sessionState = informationQuerySessionState,
+            //             usesBottomNavigation = currentLayoutSpec?.usesBottomNavigation == true,
+            //         ).build(),
+            //         FrameLayout.LayoutParams(
+            //             ViewGroup.LayoutParams.MATCH_PARENT,
+            //             ViewGroup.LayoutParams.MATCH_PARENT,
+            //         ),
+            //     )
+            // }
             Destination.SETTINGS -> SettingsPage(
                 this,
                 credentialStore,
@@ -756,6 +765,10 @@ class MainActivity : Activity() {
                 currentLayoutSpec?.contentWidthDp ?: currentWindowWidthDp(),
                 currentLayoutSpec?.usesBottomNavigation == true,
             ).build()
+            // 魔改（肇庆学院）：教学日历/查询入口已从导航移除；此分支兜底占位。
+            else -> FrameLayout(this).apply {
+                setThemeBackgroundColor { Palette.background }
+            }
         }
         page.id = destination.pageViewID
         UiText.localizeTree(page)
@@ -1138,13 +1151,14 @@ class MainActivity : Activity() {
         calendarDailyInfoRepository.clearAssignments()
     }
 
-    private fun refreshClassroomsAtStartup() {
-        classroomRepository.refresh(force = false) { result ->
-            if (result.isSuccess && selectedDestination == Destination.PLANNER) {
-                refreshCurrentPage()
-            }
-        }
-    }
+    // 魔改（肇庆学院）：空教室启动刷新已停用（北邮专属）。
+    // private fun refreshClassroomsAtStartup() {
+    //     classroomRepository.refresh(force = false) { result ->
+    //         if (result.isSuccess && selectedDestination == Destination.PLANNER) {
+    //             refreshCurrentPage()
+    //         }
+    //     }
+    // }
 
     private fun refreshScheduleAtStartup() {
         val credentials = credentialStore.load()
@@ -1167,7 +1181,8 @@ class MainActivity : Activity() {
                 automaticScheduleLaunchRefreshKey = null
             }
             if (result.isSuccess) {
-                reconcileDailyCourseNotifications()
+                // 魔改（肇庆学院）：每日课程摘要通知停用。
+                // reconcileDailyCourseNotifications()
                 if (::content.isInitialized) refreshCurrentPage()
             }
         }
@@ -1189,10 +1204,11 @@ class MainActivity : Activity() {
         pendingCalendarImport = null
         pendingNotificationPermissionCompletion = null
         scheduleRepository.close()
-        classroomRepository.close()
-        weatherRepository.close()
-        shuttleBusRepository.close()
-        calendarDailyInfoRepository.close()
+        // 魔改（肇庆学院）：以下仓库已停用，避免触发懒加载初始化。
+        // classroomRepository.close()
+        // weatherRepository.close()
+        // shuttleBusRepository.close()
+        // calendarDailyInfoRepository.close()
         if (holidayRepositoryDelegate.isInitialized()) {
             holidayRepository.close()
         }

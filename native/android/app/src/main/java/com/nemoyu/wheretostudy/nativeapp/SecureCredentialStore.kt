@@ -34,14 +34,15 @@ internal object CredentialUpdateLogic {
         val account = requestedAccount.trim()
         if (account.isEmpty()) {
             if (enteredPassword.isNotEmpty() || enteredTeachingCloudPassword.isNotEmpty()) {
-                throw CredentialUpdateException("请输入教务账号。")
+                // 魔改（肇庆学院）：账号即学号。
+                throw CredentialUpdateException("请输入学号。")
             }
             return Credentials("", "")
         }
         val sameAccount = saved?.account?.trim() == account
         val password = enteredPassword.takeIf(String::isNotEmpty)
             ?: saved?.password?.takeIf { sameAccount }
-            ?: throw CredentialUpdateException("更换教务账号时必须输入新密码。")
+            ?: throw CredentialUpdateException("更换学号时必须粘贴新的教务 Cookie。")
         val cloudPassword = when {
             useAcademicPassword -> null
             enteredTeachingCloudPassword.isNotEmpty() -> enteredTeachingCloudPassword
@@ -182,6 +183,21 @@ class AppPreferences(context: Context) {
             ?: AppMetadata.defaultTermStartDate
         set(value) {
             save(TERM_START_DATE_KEY, value)
+        }
+
+    // 魔改（肇庆学院）：教务系统地址与班级代码（乘方教务对接参数）。
+    var jwglBaseURL: String
+        get() = preferences.getString(JWGL_BASE_URL_KEY, ZquScheduleClient.DEFAULT_BASE_URL)
+            ?: ZquScheduleClient.DEFAULT_BASE_URL
+        set(value) {
+            save(JWGL_BASE_URL_KEY, value.trim())
+        }
+
+    var classCode: String
+        get() = preferences.getString(CLASS_CODE_KEY, ZquScheduleClient.DEFAULT_CLASS_CODE)
+            ?: ZquScheduleClient.DEFAULT_CLASS_CODE
+        set(value) {
+            save(CLASS_CODE_KEY, value.trim())
         }
 
     var automaticTermDetectionEnabled: Boolean
@@ -361,6 +377,9 @@ class AppPreferences(context: Context) {
         const val LANGUAGE_KEY = "language_code"
         const val TERM_ID_KEY = "term_id"
         const val TERM_START_DATE_KEY = "term_start_date"
+        // 魔改（肇庆学院）：乘方教务对接参数存储键。
+        const val JWGL_BASE_URL_KEY = "jwgl_base_url"
+        const val CLASS_CODE_KEY = "class_code"
         const val DAILY_COURSE_NOTIFICATIONS_KEY = "daily_course_notifications_enabled"
         const val DAILY_COURSE_NOTIFICATION_MINUTES_KEY = "daily_course_notification_minutes"
         const val AUTOMATIC_TERM_DETECTION_KEY = "automatic_term_detection_enabled"

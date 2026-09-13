@@ -2,6 +2,8 @@
 
 # Where To Study
 
+> **肇庆学院魔改版**：本 fork 对接乘方教务系统，仅保留 Android 端"查看个人课表"功能。使用与部署说明见 [README-ZQU.md](./README-ZQU.md)。
+
 北邮空教室与个人课表联动查询应用。Windows 与 Linux 客户端使用 Tauri 2、React 和 Rust，
 macOS/iOS 客户端使用 SwiftUI，Android 客户端使用 Kotlin 与 Android Views，
 鸿蒙（HarmonyOS NEXT）客户端使用 ArkTS 与 ArkUI；macOS 同时保留 Tauri Apple
